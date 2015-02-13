@@ -687,15 +687,25 @@ class procedure TGtk2WSWinControl.SetCursor(const AWinControl: TWinControl; cons
 var
   WidgetInfo: PWidgetInfo;
   NewCursor: HCURSOR;
+  P: TPoint;
+  AControl: TControl;
 begin
   if not WSCheckHandleAllocated(AWinControl, 'SetCursor')
   then Exit;
 
-  if ACursor <> Screen.Cursors[crDefault] then
-    NewCursor := ACursor
-  else
+  GTK2WidgetSet.GetCursorPos(P);
+  P := AWinControl.ScreenToClient(P);
+  AControl := AWinControl.ControlAtPos(P, [capfOnlyClientAreas,
+    capfAllowWinControls, capfHasScrollOffset, capfRecursive]);
+
+  if AControl = nil then
+    AControl := AWinControl;
+  NewCursor := Screen.Cursors[AControl.Cursor];
+
+  if NewCursor = Screen.Cursors[crDefault] then
     NewCursor := 0;
   WidgetInfo := GetWidgetInfo({%H-}Pointer(AWinControl.Handle));
+
   if WidgetInfo^.ControlCursor <> NewCursor then
   begin
     WidgetInfo^.ControlCursor := NewCursor;
